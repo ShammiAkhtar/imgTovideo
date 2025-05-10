@@ -1,0 +1,133 @@
+// File: server/index.js
+
+const express = require('express');
+const cors = require('cors');
+const bodyParser = require('body-parser');
+require('dotenv').config();
+
+const app = express();
+app.use(cors());
+app.use(bodyParser.json());
+
+const API_KEYS = new Set([process.env.API_KEY]); // Store your API key in .env file
+
+// Middleware to check API key
+app.use((req, res, next) => {
+  const userKey = req.headers['x-api-key'];
+  if (!API_KEYS.has(userKey)) {
+    return res.status(403).json({ error: 'Forbidden: Invalid API Key' });
+  }
+  next();
+});
+
+// Dummy endpoint to simulate image-to-video conversion
+app.post('/api/convert', (req, res) => {
+  const { imageUrl, prompt } = req.body;
+  // In production, integrate with a real service like RunwayML or Kaiber
+  res.json({
+    status: 'success',
+    message: 'Video generated (mock response)',
+    videoUrl: 'https://example.com/fake-video.mp4'
+  });
+});
+
+const PORT = process.env.PORT || 5000;
+app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+
+
+/* ----------------------------- FRONTEND FILES ----------------------------- */
+
+// File: public/index.html
+/*
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Image to Video</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="container">
+    <h1>Image to Video Generator</h1>
+    <input type="text" id="apiKey" placeholder="Enter API Key">
+    <input type="text" id="imageUrl" placeholder="Image URL">
+    <input type="text" id="prompt" placeholder="Describe the video">
+    <button onclick="generateVideo()">Generate Video</button>
+    <div id="output"></div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
+*/
+
+// File: public/styles.css
+/*
+body {
+  font-family: sans-serif;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  background: #f5f5f5;
+  margin: 0;
+}
+.container {
+  background: white;
+  padding: 2rem;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  width: 90%;
+  max-width: 500px;
+}
+input {
+  width: 100%;
+  padding: 0.75rem;
+  margin: 0.5rem 0;
+  border-radius: 5px;
+  border: 1px solid #ccc;
+}
+button {
+  width: 100%;
+  padding: 0.75rem;
+  background: #007bff;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}
+button:hover {
+  background: #0056b3;
+}
+#output {
+  margin-top: 1rem;
+}
+*/
+
+// File: public/app.js
+/*
+async function generateVideo() {
+  const apiKey = document.getElementById('apiKey').value;
+  const imageUrl = document.getElementById('imageUrl').value;
+  const prompt = document.getElementById('prompt').value;
+
+  const res = await fetch('http://localhost:5000/api/convert', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'x-api-key': apiKey
+    },
+    body: JSON.stringify({ imageUrl, prompt })
+  });
+
+  const data = await res.json();
+
+  const output = document.getElementById('output');
+  if (data.videoUrl) {
+    output.innerHTML = `<video controls width="100%"><source src="${data.videoUrl}" type="video/mp4"></video>`;
+  } else {
+    output.innerText = 'Error generating video';
+  }
+}
+*/
